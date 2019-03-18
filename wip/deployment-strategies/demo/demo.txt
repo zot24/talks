@@ -1,0 +1,350 @@
+Setup
+=====
+
+# clone container solutions k8s-deployment-strategies repo
+git clone git@github.com:ContainerSolutions/k8s-deployment-strategies.git strategies
+cd k8s-deployment-strategies
+git checkout 733386675d911aabcf8516fa59d320cc5559623a
+
+# run minikube
+minikube start \
+    --kubernetes-version v1.13.4 \
+    --memory=8192 \
+    --cpus 2 \
+    --bootstrapper=kubeadm \
+    --extra-config=kubelet.authentication-token-webhook=true \
+    --extra-config=kubelet.authorization-mode=Webhook \
+    --extra-config=scheduler.address=0.0.0.0 \
+    --extra-config=controller-manager.address=0.0.0.0
+
+# install helm
+helm init
+
+# install prometheus
+helm install \
+    --namespace=monitoring \
+    --name=prometheus \
+    stable/prometheus
+
+# install grafana configmap for dashboards and datasources
+kubectl apply -f manifests/
+
+# install grafana
+helm install \
+    --namespace=monitoring \
+    --name=grafana \
+    --set=adminUser=admin \
+    --set=adminPassword=admin \
+    --set=service.type=NodePort \
+    --set=sidecar.dashboards.enabled=true \
+    --set=sidecar.datasources.enabled=true \
+    stable/grafana
+
+# access grafana dashboard
+minikube service list
+
+
+---
+
+
+Recreate
+========
+
+# open a new terminal and watch the deployments in action
+watch kubectl get po
+
+# deploy version 1
+kubectl apply -f strategies/recreate/app-v1.yaml
+
+# check deployment
+curl $(minikube service my-app --url)
+
+# open a new terminal, hammer it and watch the next step progress
+service=$(minikube service my-app --url)
+while sleep 0.1; do curl -sS  "$service"; done | lolcat
+
+# deploy version 2 | WHAT DO YOU THINK WILL HAPPEN NOW!?
+kubectl apply -f strategies/recreate/app-v2.yaml
+
+# remove it all!
+kubectl delete all -l app=my-app
+
+> Recreate - TL;DR: Desmostrate downtime when deploying a new version of our application
+
+
+---
+
+
+Ramped
+======
+
+# open a new terminal and watch the deployments in action
+watch kubectl get po
+
+# deploy version 1
+kubectl apply -f strategies/ramped/app-v1.yaml
+
+# check deployment
+curl $(minikube service my-app --url)
+
+# open a new terminal, hammer it and watch the next step progress
+service=$(minikube service my-app --url)
+while sleep 0.1; do curl -sS  "$service"; done | lolcat
+
+# modify app-v2.yaml to add successThreshold: 2 under readinessProbe
+# I think we get into a race condition that make few requests to fail while rolling the upgrade
+# that's why we need to add a second check call to mark the pod as ready to receive requests
+          
+# deploy version 2 | WHAT DO YOU THINK WILL HAPPEN NOW!?
+kubectl apply -f strategies/ramped/app-v2.yaml
+
+# remove it all!
+kubectl delete all -l app=my-app
+
+> Ramped - TL;DR: In contrast with the previous example it shouldn't be any downtime 
+>   actually there is a small amount of request failling as there is no way to check for health before removing the old version
+>   a service mesh implementing circuit breaking principle will help to solve this situation
+> Ready: the Pod is able to serve requests and should be added to the load balancing pools of all matching Services;
+> https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/
+> https://github.com/heptiolabs/healthcheck
+> https://medium.com/platformer-blog/enable-rolling-updates-in-kubernetes-with-zero-downtime-31d7ec388c81 
+
+
+---
+
+
+Blue / Green (w/traefik)
+========================
+
+# open a new terminal and watch the deployments in action
+watch kubectl get po
+
+# install traefik loadbalancer/proxy
+helm install \
+    --name=traefik \
+    --set rbac.enabled=true \
+    --set dashboard.enabled=true \
+    --set dashboard.serviceType=NodePort \
+    --set dashboard.domain=traefik.dashboard.com \
+    stable/traefik
+
+# deploy version 1
+kubectl apply \
+    -f strategies/blue-green/multiple-services/app-a-v1.yaml \
+    -f strategies/blue-green/multiple-services/app-b-v1.yaml \
+    -f strategies/blue-green/multiple-services/ingress-v1.yaml
+
+# open a two new terminals, hammer both versions and watch the next step progress
+ingress=$(minikube service traefik --url | head -n1)
+while sleep 0.1; do curl -sS  "$ingress" -H "Host: a.domain.com" ; done | lolcat
+while sleep 0.1; do curl -sS  "$ingress" -H "Host: b.domain.com" ; done | lolcat
+
+# deploy version 2 | WHAT DO YOU THINK WILL HAPPEN NOW!?
+kubectl apply \
+    -f strategies/blue-green/multiple-services/app-a-v2.yaml \
+    -f strategies/blue-green/multiple-services/app-b-v2.yaml
+
+# release version 2 | WHAT DO YOU THINK WILL HAPPEN NOW!?
+kubectl apply -f strategies/blue-green/multiple-services/ingress-v2.yaml
+
+# let's rollback coz I want to! :)
+kubectl apply -f strategies/blue-green/multiple-services/ingress-v1.yaml
+
+# remove it all!
+kubectl delete \
+    -f strategies/blue-green/multiple-services/app-a-v2.yaml \
+    -f strategies/blue-green/multiple-services/app-b-v2.yaml
+
+kubectl delete \
+    -f strategies/blue-green/multiple-services/app-a-v1.yaml \
+    -f strategies/blue-green/multiple-services/app-b-v1.yaml \
+    -f strategies/blue-green/multiple-services/ingress-v1.yaml
+    
+helm del traefik && helm del --purge traefik
+    
+> Blue/Green (w/traefik) - TL;DR: 0 downtime easy/fast rollback
+
+
+---
+
+
+Canary (w/ingress-nginx)
+=======================
+
+# open a new terminal and watch the deployments in action
+watch kubectl get po
+
+# deploy ingress-nginx
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/mandatory.yaml
+
+# expose the ingress-nginx
+kubectl expose deployment \
+    -n ingress-nginx nginx-ingress-controller \
+    --port 80 \
+    --type NodePort \
+    --name ingress-nginx
+    
+# check the ingress-nginx deployment
+kubectl get all -n ingress-nginx
+curl $(m service ingress-nginx --url -n ingress-nginx)
+
+# deploy version 1
+kubectl apply \
+    -f strategies/canary/nginx-ingress/app-v1.yaml \
+    -f strategies/canary/nginx-ingress/ingress-v1.yaml
+    
+# deploy version 2
+kubectl apply -f strategies/canary/nginx-ingress/app-v2.yaml
+
+# open a new terminal, hammer it and watch the next step progress
+nginx_service=$(minikube service ingress-nginx -n ingress-nginx --url)
+while sleep 0.1; do curl -sS "$nginx_service" -H "Host: my-app.com"; done | lolcat
+
+# create a canary ingress in order to split traffic: 90% to v1, 10% to v2
+kubectl apply -f strategies/canary/nginx-ingress/ingress-v2-canary.yaml
+
+# play with different values and re-apply config, e.g. 25% to v1, 75% to v2
+kubectl apply -f strategies/canary/nginx-ingress/ingress-v2-canary.yaml
+
+# When you are happy, delete the canary ingress
+kubectl delete -f strategies/canary/nginx-ingress/ingress-v2-canary.yaml
+
+# Then finish the rollout, set 100% traffic to version 2
+kubectl apply -f strategies/canary/nginx-ingress/ingress-v2.yaml
+
+# remove it all!
+kubectl delete all,ingress -l app=my-app
+kubectl delete namespace ingress-nginx
+
+> Canary (w/ingress-nginx) - TL;DR: really easy to rollback and check your app progresivelly
+
+
+---
+
+
+A/B testing (w/istio)
+=====================
+
+# open a new terminal and watch the deployments in action
+watch kubectl get all,virtualservice,gateway
+
+# install istio
+curl -L https://git.io/getLatestIstio | sh -
+helm install istio-*/install/kubernetes/helm/istio --name istio --namespace istio-system
+
+# enable istio automatic sidecar injection
+kubectl label namespace default istio-injection=enabled
+
+# deploy version 1 and version 2 and identify the proxy/sidecar describing it
+kubectl apply -f strategies/ab-testing/app-v1.yaml -f strategies/ab-testing/app-v2.yaml
+
+# expose both services via the Istio Gateway and create a VirtualService to match
+requests to the my-app-v1 service:
+kubectl apply -f strategies/ab-testing/gateway.yaml -f strategies/ab-testing/virtualservice.yaml
+
+# check deployment works as expected
+curl $(minikube service istio-ingressgateway -n istio-system --url | head -n1) -H 'Host: my-app.local'
+
+# check traffic per header
+istio_ingressgateway=$(minikube service istio-ingressgateway -n istio-system --url | head -n1)
+while sleep 0.1; do curl -sS "$istio_ingressgateway" -H "Host: my-app.local" -H "X-API-Version: v1.0.0"; done | lolcat
+while sleep 0.1; do curl -sS "$istio_ingressgateway" -H "Host: my-app.local" -H "X-API-Version: v2.0.0"; done | lolcat
+
+# test traffic base on specific user (header) / as soon as we apply this our last curl stop as it doesn't meet the needed condition
+kubectl apply -f strategies/ab-testing/virtualservice-match.yaml
+
+# remove it all!
+kubectl delete all,ingress,gateway,virtualservice -l app=my-app
+helm delete --purge istio
+kubectl -n istio-system delete job --all
+kubectl delete -f istio-*/install/kubernetes/helm/istio/templates/crds.yaml -n istio-system
+kubectl delete namespace istio-system
+rm -rf istio-*
+
+?
+
+This is the same as the canary example but using Istio
+
+# test deployment
+# istio_ingressgateway=$(minikube service istio-ingressgateway -n istio-system --url | head -n1)
+# while sleep 0.1; do curl -sS "$istio_ingressgateway" -H "Host: my-app.local"; done | lolcat
+
+# test shiftt traffic base on percentage (canary)
+# kubectl apply -f strategies/ab-testing/virtualservice-weight.yaml
+
+> A/B testing (w/istio) - TL;DR: flexible way to test your apps in production environment without affecting real traffic
+
+
+---
+
+
+Shadow (w/istio)
+================
+
+# open a new terminal and watch the deployments in action
+watch kubectl get all,virtualservice,gateway
+
+# install istio
+curl -L https://git.io/getLatestIstio | sh -
+helm install istio-*/install/kubernetes/helm/istio --name istio --namespace istio-system
+
+# enable istio automatic sidecar injection
+kubectl label namespace default istio-injection=enabled
+
+# deploy version 1 and version 2 and identify the proxy/sidecar describing it
+kubectl apply -f strategies/shadow/app-v1.yaml -f strategies/shadow/app-v2.yaml
+
+# expose both services via the Istio Gateway and create a VirtualService to match
+requests to the my-app-v1 service:
+kubectl apply -f strategies/shadow/gateway.yaml -f strategies/shadow/virtualservice.yaml
+
+# check deployment works as expected
+curl $(minikube service istio-ingressgateway -n istio-system --url | head -n1) -H 'Host: my-app.local'
+
+# check traffic only V1 should be hit at this point
+istio_ingressgateway=$(minikube service istio-ingressgateway -n istio-system --url | head -n1)
+while sleep 0.1; do curl -sS "$istio_ingressgateway" -H "Host: my-app.local"; done | lolcat
+
+# enable traffic mirroying / nothing change on the console command
+kubectl apply -f strategies/shadow/virtualservice-mirror.yaml
+
+# remove it all!
+kubectl delete all,ingress,gateway,virtualservice -l app=my-app
+helm delete --purge istio
+kubectl -n istio-system delete job --all
+kubectl delete -f istio-*/install/kubernetes/helm/istio/templates/crds.yaml -n istio-system
+kubectl delete namespace istio-system
+rm -rf istio-*
+
+
+---
+
+
+Cleaning up
+============
+
+# remove grafana
+helm delete --purge grafana
+
+# remove prometheus
+helm delete --purge prometheus
+
+# remove monitoring namespace
+kubectl delete namespace monitoring
+
+
+---
+
+
+Extra commands
+==============
+
+# deploy grafana as w/guest user enable by default
+helm install \
+    --namespace=monitoring \
+    --name=grafana \
+    --set=service.type=NodePort \
+    --set=sidecar.dashboards.enabled=true \
+    --set=sidecar.datasources.enabled=true \
+    --set 'grafana\.ini'.'auth\.anonymous'.enabled=true \
+    stable/grafana
