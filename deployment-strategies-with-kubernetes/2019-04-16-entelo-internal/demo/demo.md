@@ -1,14 +1,3 @@
-Questions?
-===
-
-- Does anyone know what Docker and a container is?
-- Does anyone know what Kubernetes is for?
-- Does anyone know what a Kubernetes manifest file is for?
-- Does anyone know what kubectl is for?
-- Does anyone know what a service mesh is for?
-
----
-
 Setup
 ===
 

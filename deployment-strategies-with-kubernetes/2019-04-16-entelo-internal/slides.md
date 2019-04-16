@@ -1,21 +1,26 @@
 footer: powered by @zot24 🐉
+theme: Plain Jane
 
 # Deployment Strageties
 ## with Kubernetes
 
 ![](img/intro-roads.jpg)
 
-^ before we start... I would like to ask:
-    Does anyone know...
+^ before we start... I would like to ask few things, could you please raise your hand if:
+    you know...
     what **Docker** and a **container** is?
     what **Kubernetes** is?
     what a **Kubernetes manifest** file is?
     what **kubectl** is?
     what a **Service Mesh** is?
 
+^ [ASK IF YOU DON'T UNDERSTAND] 
+
 ^ [SHORT PAUSE]
 
-^ ok cool... point to the slides and...
+^ ok cool... 
+
+^ [POINT TO SLIDES][READ TITLE]
 
 ^ choices, life it's full of them!
 
@@ -54,11 +59,15 @@ footer: powered by @zot24 🐉
 
 ^ we're gonna start with few base and key concepts, to understand better what I'll be explaining later on
 
+^ let's start with resiliency and reliability
+
 [.hide-footer]
 
 ---
 
 # Resiliency 🤾‍‍
+
+^ [SHORT PAUSE]
 
 [.hide-footer]
 
@@ -68,7 +77,9 @@ footer: powered by @zot24 🐉
 
 ![inline 50%](img/springs.jpg)
 
-^ flexibility of our app when it comes to handle errors, failures and sloweness
+^ *flexibility* of our app when it comes to handle errors, failures and sloweness
+
+^ blend
 
 ^ having this in consideration what's the meaning of the second term "reliability" 
 
@@ -125,7 +136,7 @@ footer: powered by @zot24 🐉
 - 👾 Deployment strategies
 - 🔑 Take Away
 
-^ Another important concept is: Liveness & Readiness
+^ [JUMP DIRECTLY TO NEXT SLIDE]
 
 [.hide-footer]
 
@@ -134,17 +145,17 @@ footer: powered by @zot24 🐉
 # What is *liveness & readiness* about?
 # 🙋‍
 
-^ ... and therefore what is it?
-
-^ note: if the process in your Container is able to crash on its own whenever it encounters an issue or becomes unhealthy, you do not necessarily need a liveness probe; the kubelet will automatically perform the correct action in accordance with the Pod’s restartPolicy.
-^
-^ if you’d like your Container to be killed and restarted if a probe fails, then specify a liveness probe, and specify a restartPolicy of Always or OnFailure.
-
 [.hide-footer]
 
 ---
 
 # Exposure 🌞 and probe 🔬
+
+^ of our applications status, is it alive? is it ready?
+
+^ scan, explore our applications status
+
+^ so basically... [NEXT SLIDE]
 
 [.hide-footer]
 
@@ -152,7 +163,9 @@ footer: powered by @zot24 🐉
 
 # Be able to know what the state of an *application* is, so that the ecosystem where **it lives** and which **manages** it can be able to do it's job better.
 
-^ this concepts will us to adopt different deployment strategies, manipulate and understand the pods status
+<!-- ^ this concepts will help us to adopt different deployment strategies, manipulate and understand our applications status -->
+
+^ how the application communicate with it's environment and expose what's state it's in.
 
 ^ let's see an example
 
@@ -184,15 +197,15 @@ health.AddReadinessCheck("database",
 
 [^1]: [https://github.com/heptiolabs/healthcheck](https://github.com/heptiolabs/healthcheck)
 
-^ Readiness
+^ **readiness**, when the applications is ready to serve traffic
 
-^ Sometimes, applications are temporarily unable to serve traffic. For example, an application might need to load large data or configuration files during startup, or depend on external services after startup. In such cases, you don’t want to kill the application, but you don’t want to send it requests either. 
+^ **liveness**, when to restart the container
 
-^ Liveness
+<!--
+^ if the process in your Container is able to crash on its own whenever it encounters an issue or becomes unhealthy, you do not necessarily need a liveness probe, restartPolicy
 
-^ Will tell Kubernetes when to restart a Container. For example, liveness probes could catch a deadlock, where an application is running, but unable to make progress. Restarting a Container in such a state can help to make the application more available despite bugs.
-
-^ How the application communicate with it's environment and expose what's state it's in.
+^ sometimes, applications are temporarily unable to serve traffic. For example, an application might need to load large data or configuration files during startup, or depend on external services after startup. In such cases, you don’t want to kill the application, but you don’t want to send it requests either.
+-->
 
 [.hide-footer]
 
@@ -222,8 +235,6 @@ health.AddReadinessCheck("database",
 [^2]: Continuous Delivery: Reliable Software Releases through Build, Test, and Deployment Automation
 
 ^ offten production it's implied
-
-^ you can—and should—deploy your software to its production environment before you make it available to users, so that you can perform smoke testing and any other tasks such as waiting for caches to warm up. The job of smoke tests is to make sure that the deployment was successful, and in particular to test that the configuration settings (such as database connection strings) for the production environment are correct
 
 [.hide-footer]
 
@@ -270,6 +281,12 @@ health.AddReadinessCheck("database",
 
 # All these *strategies*, will help us to ensure *reliability* in our systems...
 
+^ by putting in production a more stable version of our application
+
+^ by testing our systems with real traffic before releasing it
+
+^ [strAtegies][rely ability]
+
 [.hide-footer]
 
 ---
@@ -279,6 +296,12 @@ health.AddReadinessCheck("database",
 ^ we will be testing:
     - w/real traffic and
     - on a real environment without affecting end customers
+    - ensure confguration settings works (e.g. db connetions)
+    - waiting for caches to warm up
+
+<!-- 
+`^ you can—and should—deploy your software to its production environment before you make it available to users, so that you can perform smoke testing and any other tasks such as waiting for caches to warm up. The job of smoke tests is to make sure that the deployment was successful, and in particular to test that the configuration settings (such as database connection strings) for the production environment are correct
+-->
 
 [.hide-footer]
 <!--
