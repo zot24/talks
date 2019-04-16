@@ -5,7 +5,7 @@ Setup
 
 ```ssh
 git clone git@github.com:ContainerSolutions/k8s-deployment-strategies.git strategies
-cd k8s-deployment-strategies
+cd strategies
 git checkout 733386675d911aabcf8516fa59d320cc5559623a
 ```
 
@@ -421,12 +421,17 @@ curl $(minikube service istio-ingressgateway -n istio-system --url | head -n1) -
 istio_ingressgateway=$(minikube service istio-ingressgateway -n istio-system --url | head -n1)
 while sleep 0.1; do curl -sS "$istio_ingressgateway" -H "Host: my-app.local"; done | lolcat
 
+# show quickly logs from V1 and V2
+kubectl logs -f pod/[OUR-POD-V1-NAME] -c my-app
+kubectl logs -f pod/[OUR-POD-V2-NAME] -c my-app  
+
 # enable traffic mirroying / nothing change on the console command | WHAT DO YOU THINK WILL HAPPEN NOW!?
 kubectl apply -f strategies/shadow/virtualservice-mirror.yaml
 
 # remove it all!
 kubectl delete all,ingress,gateway,virtualservice -l app=my-app
 helm delete --purge istio
+kubectl label namespace default istio-injection-
 kubectl -n istio-system delete job --all
 kubectl delete -f istio-*/install/kubernetes/helm/istio/templates/crds.yaml -n istio-system
 kubectl delete namespace istio-system
