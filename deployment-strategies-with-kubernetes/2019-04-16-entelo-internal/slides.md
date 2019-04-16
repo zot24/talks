@@ -213,22 +213,17 @@ health.AddReadinessCheck("database",
 
 # Deploy != Release 🚀
 
-We deploy when we install our application into a particular environemnt, however we only release our application when we make it avaiabe to users
+<!-- We **deploy** when we install our application into a particular environemnt, however we only **release** our application when we make it avaiabe to users -->
 
-**Deployment** is what happens when you install some version of your software into a particular environment
+### **Deployment** is what happens when you install some version of your software into a particular environment
 
-**Release** is when you make a system or some part of it (for example, a feature) available to users
-
-<!-- Stick with the concepts and differences between deploy and release
-Explain the differentiation -->
+### **Release** is when you make a system or some part of it (for example, a feature) available to users
 
 [^2]: Continuous Delivery: Reliable Software Releases through Build, Test, and Deployment Automation
 
-^ When talking about a deployment the production environment is often implied
+^ offten production it's implied
 
-^ Related with blue-green deployments and canary releasing
-
-^ You can—and should—deploy your software to its production environment before you make it available to users, so that you can perform smoke testing and any other tasks such as waiting for caches to warm up. The job of smoke tests is to make sure that the deployment was successful, and in particular to test that the configuration settings (such as database connection strings) for the production environment are correct.
+^ you can—and should—deploy your software to its production environment before you make it available to users, so that you can perform smoke testing and any other tasks such as waiting for caches to warm up. The job of smoke tests is to make sure that the deployment was successful, and in particular to test that the configuration settings (such as database connection strings) for the production environment are correct
 
 [.hide-footer]
 
