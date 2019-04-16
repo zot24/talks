@@ -344,7 +344,6 @@ routing a subset of users to a new functionality under specific conditions, wide
 watch kubectl get all,virtualservice,gateway
 
 # install istio
-curl -L https://git.io/getLatestIstio | ISTIO_VERSION=1.0.7 sh -
 curl -L https://git.io/getLatestIstio | ISTIO_VERSION=1.0.0 sh -
 helm install istio-*/install/kubernetes/helm/istio --name istio --namespace istio-system
 
@@ -369,24 +368,24 @@ while sleep 0.1; do curl -sS "$istio_ingressgateway" -H "Host: my-app.local" -H 
 # test traffic base on specific user (header) | WHAT DO YOU THINK WILL HAPPEN NOW!?
 kubectl apply -f strategies/ab-testing/virtualservice-match.yaml
 
-# remove it all!
+---
+
+# open a new terminal and hammer the app without any header | WHAT DO YOU THINK WILL HAPPEN NOW!?
+istio_ingressgateway=$(minikube service istio-ingressgateway -n istio-system --url | head -n1)
+while sleep 0.1; do curl -sS "$istio_ingressgateway" -H "Host: my-app.local"; done | lolcat
+
+# test shiftt traffic base on percentage (canary) | WHAT DO YOU THINK WILL HAPPEN NOW!?
+kubectl apply -f strategies/ab-testing/virtualservice-weight.yaml
+
+---
+
+# remove it all! (WAIT! if you are going to show Shadow you'll need istio)
 kubectl delete all,ingress,gateway,virtualservice -l app=my-app
 helm delete --purge istio
 kubectl -n istio-system delete job --all
 kubectl delete -f istio-*/install/kubernetes/helm/istio/templates/crds.yaml -n istio-system
 kubectl delete namespace istio-system
 rm -rf istio-*
-
-?
-
-This is the same as the canary example but using Istio
-
-# test deployment
-# istio_ingressgateway=$(minikube service istio-ingressgateway -n istio-system --url | head -n1)
-# while sleep 0.1; do curl -sS "$istio_ingressgateway" -H "Host: my-app.local"; done | lolcat
-
-# test shiftt traffic base on percentage (canary)
-# kubectl apply -f strategies/ab-testing/virtualservice-weight.yaml
 ```
 
 ## Grafana dashboard
@@ -400,10 +399,10 @@ This is the same as the canary example but using Istio
 Shadow (w/istio)
 ===
 
-A shadow deployment consists of releasing version 2 alongside version 1, fork version 1’s incoming requests and send them to version 2 as well without impacting production traffic. 
+a shadow deployment consists of releasing version 2 alongside version 1, fork version 1’s incoming requests and send them to version 2 as well without impacting production traffic. 
 
 - test production load on a new feature
-- rollout happens when we hit stability and performance
+- rollout happens when we hit stability and performance ☺️
 - complex to implement, e.g. egress traffic on an ecommerce solution
 
 ## Demo
@@ -413,7 +412,7 @@ A shadow deployment consists of releasing version 2 alongside version 1, fork ve
 watch kubectl get all,virtualservice,gateway
 
 # install istio
-curl -L https://git.io/getLatestIstio | sh -
+curl -L https://git.io/getLatestIstio | ISTIO_VERSION=1.0.0 sh -
 helm install istio-*/install/kubernetes/helm/istio --name istio --namespace istio-system
 
 # enable istio automatic sidecar injection
@@ -433,7 +432,7 @@ curl $(minikube service istio-ingressgateway -n istio-system --url | head -n1) -
 istio_ingressgateway=$(minikube service istio-ingressgateway -n istio-system --url | head -n1)
 while sleep 0.1; do curl -sS "$istio_ingressgateway" -H "Host: my-app.local"; done | lolcat
 
-# enable traffic mirroying / nothing change on the console command
+# enable traffic mirroying / nothing change on the console command | WHAT DO YOU THINK WILL HAPPEN NOW!?
 kubectl apply -f strategies/shadow/virtualservice-mirror.yaml
 
 # remove it all!
