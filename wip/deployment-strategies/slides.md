@@ -5,9 +5,19 @@ footer: powered by @zot24 🐉
 
 ![](img/intro-roads.jpg)
 
-^ Before we start questions: docker, containers, kubernetes, service mesh, istio
+^ before we start... I would like to ask:
+    Does anyone know...
+    what **Docker** and a **container** is?
+    what **Kubernetes** is?
+    what a **Kubernetes manifest** file is?
+    what **kubectl** is?
+    what a **Service Mesh** is?
 
-^ Choices, life it's full of them!
+^ [SHORT PAUSE]
+
+^ ok cool... point to the slides and...
+
+^ choices, life it's full of them!
 
 [.footer-style: alignment(right)]
 <!--
@@ -23,9 +33,11 @@ footer: powered by @zot24 🐉
 
 ### You'll be able to understand the **different choices** we have when it comes to **operate** our applications *deployments*.
 
-^ Notice the highlight words, I want to empahtise here that different choices => flexibility => operational responsability
+^ notice the highlight words, I want to empahtise here that different choices => flexibility => operational responsability
 
 ^ => implies
+
+^ we'll be responsible for handeling how our app and features reach our final users
 
 [.hide-footer]
 
@@ -34,13 +46,13 @@ footer: powered by @zot24 🐉
 # Summary 🗓
 
 - 🔖 Key concepts 
-    > 🤾 **Resiliency & Reliability**
-    > 📡 Liveness & Readiness
-    > 🚀 Deploy != Release
+    - 🤾 **Resiliency & Reliability**
+    - 📡 Liveness & Readiness
+    - 🚀 Deploy != Release
 - 👾 Deployment strategies
 - 🔑 Take Away 
 
-^ We're gonna start with few key concepts that are basics for each strategy and then dig deep into each of them with a live demo!
+^ we're gonna start with few base and key concepts, to understand better what I'll be explaining later on
 
 [.hide-footer]
 
@@ -56,7 +68,9 @@ footer: powered by @zot24 🐉
 
 ![inline 50%](img/springs.jpg)
 
-^ Flexibility of our app when it comes to handle from errors, failures and sloweness
+^ flexibility of our app when it comes to handle errors, failures and sloweness
+
+^ having this in consideration what's the meaning of the second term "reliability" 
 
 [.hide-footer]
 
@@ -70,7 +84,7 @@ footer: powered by @zot24 🐉
 
 # It *operates perfectly* all the time 👌
 
-^ It's what we aim for, 100% operability
+^ it's what we aim for, 100% operability
 
 [.hide-footer]
 
@@ -79,7 +93,7 @@ footer: powered by @zot24 🐉
 # 🤔
 ## but ... how?
 
-^ but how we actually achieve this?
+^ but how do we actually achieve this?
 
 [.hide-footer]
 
@@ -95,7 +109,7 @@ footer: powered by @zot24 🐉
 
 # 🤾‍‍ Resiliency
 
-^ Throught resiliency
+^ throught resiliency
 ^ **Resiliency** can also be called **Recoverability**
 
 [.hide-footer]
@@ -122,19 +136,15 @@ footer: powered by @zot24 🐉
 
 ^ ... and therefore what is it?
 
-^ example: If the process in your Container is able to crash on its own whenever it encounters an issue or becomes unhealthy, you do not necessarily need a liveness probe; the kubelet will automatically perform the correct action in accordance with the Pod’s restartPolicy.
-^ 
-^ If you’d like your Container to be killed and restarted if a probe fails, then specify a liveness probe, and specify a restartPolicy of Always or OnFailure.
+^ note: if the process in your Container is able to crash on its own whenever it encounters an issue or becomes unhealthy, you do not necessarily need a liveness probe; the kubelet will automatically perform the correct action in accordance with the Pod’s restartPolicy.
+^
+^ if you’d like your Container to be killed and restarted if a probe fails, then specify a liveness probe, and specify a restartPolicy of Always or OnFailure.
 
 [.hide-footer]
 
 ---
 
-# Exposure and probe 🌞
-
-^ Use this to improve slide eplanation https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
-
-^ This concepts will us to adopt different deployment strategies
+# Exposure 🌞 and probe 🔬
 
 [.hide-footer]
 
@@ -142,8 +152,9 @@ footer: powered by @zot24 🐉
 
 # Be able to know what the state of an *application* is, so that the ecosystem where **it lives** and which **manages** it can be able to do it's job better.
 
+^ this concepts will us to adopt different deployment strategies, manipulate and understand the pods status
 
-^ Let's see an example
+^ let's see an example
 
 [.hide-footer]
 
@@ -171,7 +182,7 @@ health.AddReadinessCheck("database",
     healthcheck.DatabasePingCheck(db, 1*time.Second))
 ```
 
-[^1]: https://github.com/heptiolabs/healthcheck
+[^1]: [https://github.com/heptiolabs/healthcheck](https://github.com/heptiolabs/healthcheck)
 
 ^ Readiness
 
@@ -211,7 +222,7 @@ We deploy when we install our application into a particular environemnt, however
 <!-- Stick with the concepts and differences between deploy and release
 Explain the differentiation -->
 
-[^1]: Continuous Delivery: Reliable Software Releases through Build, Test, and Deployment Automation
+[^2]: Continuous Delivery: Reliable Software Releases through Build, Test, and Deployment Automation
 
 ^ When talking about a deployment the production environment is often implied
 
@@ -262,6 +273,22 @@ Explain the differentiation -->
 
 ---
 
+# All these *strategies*, will help us to ensure *reliability* in our systems...
+
+[.hide-footer]
+
+---
+
+# When *deploying* first and *releasing* later, we can verify our application from a perspective that otherwise we wouldn't be able to...
+
+^ we will be testing:
+    - w/real traffic and
+    - on a real environment without affecting end customers
+
+[.hide-footer]
+<!--
+---
+
 ![inline 100%](img/cindy-tweet.png)
 
 ^ There is a lot of saying in this tweet comments however I meant to highlight what Cindy say, there is no much differcen between these two sentences: "works in staging" = "works in my machine" 
@@ -270,15 +297,17 @@ Explain the differentiation -->
 
 [.hide-footer]
 
----
+--- 
 
 # [fit] "works in *staging*" = "works in my *machine*" 
 
-[.hide-footer]
+^ it's just one step further, just slightly beter
 
+[.hide-footer]
+-->
 ---
 
-# Take aways 🔑
+# Links 🔗
 
 - **Traffic Shadowing and Dark Launching** by *Daniel Byrant*
     - [http://bit.ly/2UOATS0](http://bit.ly/2UOATS0)
@@ -289,21 +318,14 @@ Explain the differentiation -->
 - **Testing in Production, the safe way** by *Cindy Sridharan*
     - [http://bit.ly/2HJJYrJ](http://bit.ly/2HJJYrJ)
 
-^ Decouple Deployment and Release
-
-^ This is a slide with a lot of info it's not meant to be read at presentation time but later one to have some resources to research about the matter
-
-^ If you want to get a deeper understanding of all these concepts and techniques this is the long "hard" way article that you "could" read
-
-^ Short, easy to read and understand "take away" that you "should" read
-
 [.hide-footer]
 
 ---
 
+# 🙋
 # Questions?
 
-🙋‍ We can follow up on Thursday *Kubernetes Working Session**
+### We can follow up  on the subject any Thursday on the *Kubernetes Working Session*
 
 [.hide-footer]
 
@@ -312,7 +334,7 @@ Explain the differentiation -->
 # Thank you 👏
 ## 🎙🦜 [https://github.com/zot24/talks](https://github.com/zot24/talks)
 
-^ All the code and presentation for this talk it's on my G/H talks repo
+^ all the code and presentation for this talk it's on my G/H talks repo
 
 [.footer-style: alignment(right)]
 
@@ -360,6 +382,5 @@ Soak testing involves testing a system with a typical production load, over a co
 https://en.wikipedia.org/wiki/Soak_testing
 
 In computer programming and software testing, smoke testing (also confidence testing, sanity testing,[1] build verification test (BVT)[2][3][4] and build acceptance test) is preliminary testing to reveal simple failures severe enough to, for example, reject a prospective software release. Smoke tests are a subset of test cases that cover the most important functionality of a component or system, used to aid assessment of whether main functions of the software appear to work correctly
-https://en.wikipedia.org/wiki/Smoke_testing_(software) -->
-
-^ There are two key concepts that will help us to improve our deployment pipeline: resiliency, and the distiction between a deployment and a release
+https://en.wikipedia.org/wiki/Smoke_testing_(software)
+-->
