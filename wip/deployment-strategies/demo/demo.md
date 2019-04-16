@@ -1,3 +1,14 @@
+Questions?
+===
+
+- Does anyone know what Docker and a container is?
+- Does anyone know what Kubernetes is for?
+- Does anyone know what a Kubernetes manifest file is for?
+- Does anyone know what kubectl is for?
+- Does anyone know what a service mesh is for?
+
+---
+
 Setup
 ===
 
@@ -334,6 +345,7 @@ watch kubectl get all,virtualservice,gateway
 
 # install istio
 curl -L https://git.io/getLatestIstio | ISTIO_VERSION=1.0.7 sh -
+curl -L https://git.io/getLatestIstio | ISTIO_VERSION=1.0.0 sh -
 helm install istio-*/install/kubernetes/helm/istio --name istio --namespace istio-system
 
 # enable istio automatic sidecar injection
@@ -354,7 +366,7 @@ istio_ingressgateway=$(minikube service istio-ingressgateway -n istio-system --u
 while sleep 0.1; do curl -sS "$istio_ingressgateway" -H "Host: my-app.local" -H "X-API-Version: v1.0.0"; done | lolcat
 while sleep 0.1; do curl -sS "$istio_ingressgateway" -H "Host: my-app.local" -H "X-API-Version: v2.0.0"; done | lolcat
 
-# test traffic base on specific user (header) / as soon as we apply this our last curl stop as it doesn't meet the needed condition
+# test traffic base on specific user (header) | WHAT DO YOU THINK WILL HAPPEN NOW!?
 kubectl apply -f strategies/ab-testing/virtualservice-match.yaml
 
 # remove it all!
