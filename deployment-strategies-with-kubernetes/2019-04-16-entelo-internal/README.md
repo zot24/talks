@@ -13,4 +13,4 @@ This talk walk you through the principles of different deployment strategies and
 
 # Setup
 
-Follow the steps you'll find on [demo.txt](presentation/demo.txt) in order to reproduce the needed environment and each of the deployment strategies.
+Follow the steps you'll find on [demo.md](demo/demo.md) in order to reproduce the needed environment and each of the deployment strategies.
